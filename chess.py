@@ -15,7 +15,7 @@ EMPTY = 0
 
 piece_name = { PAWN : "pawn", TOWER : "tower",
                KNIGHT : "knight", BISHOP : "bishop", QUEEN : "queen",
-               KING : "king", EMPTY : ""}
+               KING : "King", EMPTY : " "}
 
 board = [TOWER, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, TOWER,
          PAWN,  PAWN,   PAWN,   PAWN,  PAWN, PAWN,   PAWN,   PAWN,
@@ -145,10 +145,15 @@ def make_move(board, move):
    
 def print_board(board):
 
+    print(" ",*list(range(8)), sep="\t")
+    
     for row in range(8):
         
-        print(*board[row*8:row*8+8],sep="\t")
-        
+        print(row, *[piece_name[abs(board[idx])
+                                ][0]+("" if board[idx]>=0 else "." )
+                           for idx in range(row*8,row*8+8)],sep="\t")
+     
+    print(" ", *list(range(8)), sep="\t")
     print("-"*40)   
     
 import random
