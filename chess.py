@@ -13,6 +13,10 @@ QUEEN = 100
 KING = 1000
 EMPTY = 0 
 
+piece_name = { PAWN : "pawn", TOWER : "tower",
+               KNIGHT : "knight", BISHOP : "bishop", QUEEN : "queen",
+               KING : "king", EMPTY : ""}
+
 board = [TOWER, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, TOWER,
          PAWN,  PAWN,   PAWN,   PAWN,  PAWN, PAWN,   PAWN,   PAWN,
          EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,  EMPTY,    EMPTY,
@@ -28,20 +32,22 @@ def possible_moves(board):
     
     for idx in range(64):
         
-        if piece := board[idx] <= EMPTY: continue
+        if (piece := board[idx]) <= EMPTY: continue
     
         row = idx // 8 
         col = idx % 8
         
+        #print(idx, row, col, piece)
+        
         if piece==PAWN:
             
-            if row<8 and board[row*8+col+1]==EMPTY:
-                moves.append( (idx, row*8+col+1))
-            if row==1 and board[row*8+col+2]==EMPTY:
-                moves.append( (idx, row*8+col+2))
-            if row<8 and col>0 and board[(row+1)*8+col-1] < EMPTY:
+            if board[(row+1)*8+col]==EMPTY:
+                moves.append( (idx, (row+1)*8+col))
+            if row==1 and board[3*8+col]==EMPTY:
+                moves.append( (idx, 3*8+col))
+            if col>0 and board[(row+1)*8+col-1] < EMPTY:
                 moves.append( (idx, (row+1)*8+col-1))
-            if row<8 and col<8 and board[(row+1)*8+col+1] < EMPTY:
+            if col<8 and board[(row+1)*8+col+1] < EMPTY:
                 moves.append( (idx, (row+1)*8+col+1))
             continue
         
@@ -89,6 +95,7 @@ def possible_moves(board):
                     moves.append( (idx, newr*8+newc))
                     
                     if board[newr*8+newc]<EMPTY: 
+      
                         break
                 
                     newr, newc = newr+incr, newc+incc 
@@ -116,12 +123,52 @@ def possible_moves(board):
                     newr, newc = newr+incr, newc+incc 
             
            
-        return moves
+    return moves
 
+def game_over(board):
+    return False
+
+def make_move(board, move):
+    
+    from_, to_ = move
+    print("%s from %s to %s" % (piece_name[abs(board[from_])],
+                                from_, to_))
+    piece = board[from_]
+    board[from_] = EMPTY
+    destiny = board[to_]
+    board[to_] = piece
+    
+    if destiny != EMPTY:
+        print("Taken: ", piece_name[abs(destiny)])
+        
+    return board
+   
+def print_board(board):
+
+    for row in range(8):
+        
+        print(*board[row*8:row*8+8],sep="\t")
+        
+    print("-"*40)   
+    
+import random
 
 if __name__ == "__main__":
 
-    for move in possible_moves(board):
-        print(move) 
+    you = False
+    
+    while not game_over(board):
+        
+        print_board(board)
+        
+        if not you:
+            moves = possible_moves(board)
+            pick = random.choice(moves) 
+            board = make_move(board, pick)
+        else:
+            move = input("Your move:")
+            
+    
+        you = not you
         
     
