@@ -203,7 +203,7 @@ def get_state(board, move):
     return ":".join(str(el) for el in board) + "".join(str(el) for el in move)
    
     
-def play(Q, board, epslon, gamma=0.9, teta=0.1):
+def play_a_hand(Q, board, epslon, gamma=0.9, teta=0.1):
     
     moves = possible_moves(board)
     pick = best_move(Q, board, moves, epslon) 
@@ -212,8 +212,13 @@ def play(Q, board, epslon, gamma=0.9, teta=0.1):
     state = get_state(board, pick)
     
     adversary = reverse(_board)
-    f_pick = best_move(Q, adversary, possible_moves(adversary), 0)
-    _, future = make_move(adversary, f_pick)
+    moves = possible_moves(adversary)
+    
+    if moves: # if there is no piece left there are no possible moves       
+        f_pick = best_move(Q, adversary, moves, 0)
+        _, future = make_move(adversary, f_pick)
+    else:
+        future = 0
     
     if state in Q:
         Q[state] += gamma*(reward - future)-teta*Q[state]  
@@ -238,7 +243,7 @@ def play_a_game(Q, board, you, auto,
         if you:
             
             if auto:
-                Q, board = play(Q, board, epslon)            
+                Q, board = play_a_hand(Q, board, epslon)            
             else:
                 move = input("Your move:")
                 _from,_to = move.split()
@@ -247,35 +252,39 @@ def play_a_game(Q, board, you, auto,
         else: # reverse board, so we can use the same function play
             #move = input("Your move:")
             board = reverse(board)            
-            Q, board = play(Q, board, epslon)
+            Q, board = play_a_hand(Q, board, epslon)
             board = reverse(board)
             
         you = not you
         steps += 1
         if epslon>0: epslon -= ep_step
 
-    return steps
+    return steps, not you
 
 K=1024
 M=K*K
 G=M*K
 
-def main(Q, max_size=2*G, auto=True):
+def main(Q, max_games=5000, max_size=2*G, auto=True):
     
     you = True
-
+    games = 1
+    you_win =  0
+    
     while True:
         
         board = new_board()
-        steps = play_a_game(Q, board, you, auto)
+        steps, your_win = play_a_game(Q, board, you, auto)
+        if your_win: you_win += 1
         you = not you    
         #print("*****", len(Q), steps)
         
-        if len(Q)%10000 == 0: 
-            print(len(Q), sys.getsizeof(Q)) 
+        if games%100 == 0: 
+            print(games, you_win, len(Q), sys.getsizeof(Q)/M) 
             if sys.getsizeof(Q) > max_size: break
+            if games>max_games: break
         
-
+        games += 1
 
 if __name__ == "__main__":
 
