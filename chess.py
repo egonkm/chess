@@ -17,7 +17,10 @@ piece_name = { PAWN : "pawn", TOWER : "tower",
                KNIGHT : "knight", BISHOP : "bishop", QUEEN : "queen",
                KING : "King", EMPTY : " "}
 
-board = [TOWER, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, TOWER,
+
+def new_board():
+    
+    return [TOWER, KNIGHT, BISHOP, QUEEN, KING, BISHOP, KNIGHT, TOWER,
          PAWN,  PAWN,   PAWN,   PAWN,  PAWN, PAWN,   PAWN,   PAWN,
          EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,  EMPTY,    EMPTY,
          EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY,  EMPTY,    EMPTY,
@@ -47,7 +50,7 @@ def possible_moves(board):
                 moves.append( (idx, 3*8+col))
             if row<7 and col>0 and board[(row+1)*8+col-1] < EMPTY:
                 moves.append( (idx, (row+1)*8+col-1))
-            if row<7 and col<8 and board[(row+1)*8+col+1] < EMPTY:
+            if row<7 and col<7 and board[(row+1)*8+col+1] < EMPTY:
                 moves.append( (idx, (row+1)*8+col+1))
             continue
         
@@ -132,9 +135,9 @@ def make_move(board, move, offset=0):
     
     reward = 0
     from_, to_ = move
-    print("%s from %s to %s" % (piece_name[abs(board[from_])],
-                                abs(offset-from_),
-                                abs(offset-to_)))
+    # print("%s from %s to %s" % (piece_name[abs(board[from_])],
+    #                             abs(offset-from_),
+    #                             abs(offset-to_)))
     piece = board[from_]
     board[from_] = EMPTY
     destiny = board[to_]
@@ -142,14 +145,16 @@ def make_move(board, move, offset=0):
     
     if destiny != EMPTY:
         reward = abs(destiny)
-        print("Taken: ", piece_name[reward])
+       # print("Taken: ", piece_name[reward])
     
     if piece==PAWN and (to_ // 8)==7: # pawn to queen
-        print("Pawn into queen")
+        #print("Pawn into queen")
         reward += 100
         board[to_] = QUEEN
      
-    if reward != 0: print("Reward:", reward)
+    if reward != 0: 
+        #print("Reward:", reward)
+        pass
     
     return board, reward
    
@@ -199,21 +204,14 @@ def play(Q, board):
     return Q, _board
     
     
-    
-import random
-
-if __name__ == "__main__":
-
-    you = True
-    Q = {}
+def play_a_game(Q, board, you):
     
     while not game_over(board):
         
-        print_board(board)
+        #print_board(board)
         
         if you:
-            Q, board = play(Q, board)
-            
+            Q, board = play(Q, board)            
             
         else:
             #move = input("Your move:")
@@ -225,4 +223,22 @@ if __name__ == "__main__":
             
         you = not you
         
-    print(len(Q))
+def main(Q, max=200000):
+    
+    you = True
+
+    while True:
+        
+        board = new_board()
+        play_a_game(Q, board, you)
+        you = not you    
+        print("*****", len(Q))
+        if len(Q)>max: break
+        
+import random
+
+if __name__ == "__main__":
+
+    Q = {}
+        
+    main(Q)
