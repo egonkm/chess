@@ -17,6 +17,7 @@ piece_name = { PAWN : "pawn", TOWER : "tower",
                KNIGHT : "knight", BISHOP : "bishop", QUEEN : "queen",
                KING : "King", EMPTY : " "}
 
+import random
 
 def new_board():
     
@@ -172,10 +173,13 @@ def print_board(board):
     print("-"*40)   
     
     
-def best_move(Q, board, moves):
+def best_move(Q, board, moves, epslon):
     
     best = 0
     
+    if epslon and random.random() < epslon:
+        return random.choice(moves)
+            
     for move in moves:
         
         state = tuple(board), move
@@ -191,51 +195,69 @@ def best_move(Q, board, moves):
     
     return random.choice(moves)
         
-def play(Q, board):
+def play(Q, board, epslon, gamma=0.9, teta=0.1):
     
     moves = possible_moves(board)
-    pick = best_move(Q, board, moves) 
+    pick = best_move(Q, board, moves, epslon) 
     _board, reward = make_move(board[:], pick)
     state = tuple(board), pick
+   
+    
+    f_pick = best_move(Q, _board, possible_moves(_board), 0)
+    _, future = make_move(_board[:], f_pick)
+    
     if state in Q:
-        Q[state] += reward 
+        Q[state] += gamma*(reward + future)-teta*Q[state]  
     else:
-        Q[state] = reward  
+        Q[state] = reward + future
     return Q, _board
     
     
-def play_a_game(Q, board, you):
+def play_a_game(Q, board, you, auto,
+                   epslon=0.2, ep_step=0.001):
     
+    steps = 0 
     while not game_over(board):
         
         #print_board(board)
         
         if you:
-            Q, board = play(Q, board)            
             
-        else:
+            if auto:
+                Q, board = play(Q, board, epslon)            
+            else:
+                move = input("Your move:")
+                _from,_to = move.split()
+                make_move(board, ( int(_from), int(_to)))
+                
+        else: # reverse board, so we can use the same function play
             #move = input("Your move:")
             board = [piece*-1 for piece in board[::-1]] # rotate the board
             
-            Q, board = play(Q, board)
+            Q, board = play(Q, board, epslon)
             
             board = [piece*-1 for piece in board[::-1]] # rotate the board
             
         you = not you
+        steps += 1
+        if epslon>0: epslon -= ep_step
+
+    return steps
+
         
-def main(Q, max=200000):
+def main(Q, max=200000, auto=True):
     
     you = True
 
     while True:
         
         board = new_board()
-        play_a_game(Q, board, you)
+        steps = play_a_game(Q, board, you, auto)
         you = not you    
-        print("*****", len(Q))
+        print("*****", len(Q), steps)
         if len(Q)>max: break
         
-import random
+
 
 if __name__ == "__main__":
 
