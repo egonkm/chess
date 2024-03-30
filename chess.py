@@ -18,6 +18,7 @@ piece_name = { PAWN : "pawn", TOWER : "tower",
                KING : "King", EMPTY : " "}
 
 import random
+import sys
 
 def new_board():
     
@@ -182,7 +183,7 @@ def best_move(Q, board, moves, epslon):
             
     for move in moves:
         
-        state = tuple(board), move
+        state = get_state(board, move)
         
         if state in Q:
             
@@ -195,13 +196,20 @@ def best_move(Q, board, moves, epslon):
     
     return random.choice(moves)
         
+def get_state(board, move):
+    
+    return tuple(board), move
+
+    return ":".join(str(el) for el in board) + "".join(str(el) for el in move)
+   
+    
 def play(Q, board, epslon, gamma=0.9, teta=0.1):
     
     moves = possible_moves(board)
     pick = best_move(Q, board, moves, epslon) 
     _board, reward = make_move(board[:], pick)
-    state = tuple(board), pick
-   
+    
+    state = get_state(board, pick)
     
     f_pick = best_move(Q, _board, possible_moves(_board), 0)
     _, future = make_move(_board[:], f_pick)
@@ -244,8 +252,11 @@ def play_a_game(Q, board, you, auto,
 
     return steps
 
-        
-def main(Q, max=200000, auto=True):
+K=1024
+M=K*K
+G=M*K
+
+def main(Q, max_size=2*G, auto=True):
     
     you = True
 
@@ -254,8 +265,11 @@ def main(Q, max=200000, auto=True):
         board = new_board()
         steps = play_a_game(Q, board, you, auto)
         you = not you    
-        print("*****", len(Q), steps)
-        if len(Q)>max: break
+        #print("*****", len(Q), steps)
+        
+        if len(Q)%10000 == 0: 
+            print(len(Q), sys.getsizeof(Q)) 
+            if sys.getsizeof(Q) > max_size: break
         
 
 
