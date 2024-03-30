@@ -211,20 +211,26 @@ def play(Q, board, epslon, gamma=0.9, teta=0.1):
     
     state = get_state(board, pick)
     
-    f_pick = best_move(Q, _board, possible_moves(_board), 0)
-    _, future = make_move(_board[:], f_pick)
+    adversary = reverse(_board)
+    f_pick = best_move(Q, adversary, possible_moves(adversary), 0)
+    _, future = make_move(adversary, f_pick)
     
     if state in Q:
-        Q[state] += gamma*(reward + future)-teta*Q[state]  
+        Q[state] += gamma*(reward - future)-teta*Q[state]  
     else:
-        Q[state] = reward + future
+        Q[state] = reward - future
     return Q, _board
     
+    
+def reverse(board):
+    
+    return [piece*-1 for piece in board[::-1]] # rotate the board
     
 def play_a_game(Q, board, you, auto,
                    epslon=0.2, ep_step=0.001):
     
     steps = 0 
+    
     while not game_over(board):
         
         #print_board(board)
@@ -240,11 +246,9 @@ def play_a_game(Q, board, you, auto,
                 
         else: # reverse board, so we can use the same function play
             #move = input("Your move:")
-            board = [piece*-1 for piece in board[::-1]] # rotate the board
-            
+            board = reverse(board)            
             Q, board = play(Q, board, epslon)
-            
-            board = [piece*-1 for piece in board[::-1]] # rotate the board
+            board = reverse(board)
             
         you = not you
         steps += 1
