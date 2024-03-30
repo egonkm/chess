@@ -128,20 +128,30 @@ def possible_moves(board):
 def game_over(board):
     return False
 
-def make_move(board, move):
+def make_move(board, move, offset=0):
     
+    reward = 0
     from_, to_ = move
     print("%s from %s to %s" % (piece_name[abs(board[from_])],
-                                from_, to_))
+                                abs(offset-from_),
+                                abs(offset-to_)))
     piece = board[from_]
     board[from_] = EMPTY
     destiny = board[to_]
     board[to_] = piece
     
     if destiny != EMPTY:
-        print("Taken: ", piece_name[abs(destiny)])
-        
-    return board
+        reward = abs(destiny)
+        print("Taken: ", piece_name[reward])
+    
+    if piece==PAWN and (to_ // 8)==7: # pawn to queen
+        print("Pawn into queen")
+        reward += 100
+        board[to_] = QUEEN
+     
+    if reward != 0: print("Reward:", reward)
+    
+    return board, reward
    
 def print_board(board):
 
@@ -160,20 +170,24 @@ import random
 
 if __name__ == "__main__":
 
-    you = False
+    you = True
     
     while not game_over(board):
         
         print_board(board)
         
-        if not you:
+        if you:
             moves = possible_moves(board)
             pick = random.choice(moves) 
-            board = make_move(board, pick)
+            board, reward = make_move(board, pick)
         else:
             move = input("Your move:")
+            board = [piece*-1 for piece in board[::-1]] # rotate the board
+            moves = possible_moves(board)
+            pick = random.choice(moves) 
+            board, reward = make_move(board, pick, 63)
+            board = [piece*-1 for piece in board[::-1]] # rotate the board
             
-    
         you = not you
         
     
