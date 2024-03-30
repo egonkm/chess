@@ -41,13 +41,13 @@ def possible_moves(board):
         
         if piece==PAWN:
             
-            if board[(row+1)*8+col]==EMPTY:
+            if row<7 and board[(row+1)*8+col]==EMPTY:
                 moves.append( (idx, (row+1)*8+col))
             if row==1 and board[3*8+col]==EMPTY:
                 moves.append( (idx, 3*8+col))
-            if col>0 and board[(row+1)*8+col-1] < EMPTY:
+            if row<7 and col>0 and board[(row+1)*8+col-1] < EMPTY:
                 moves.append( (idx, (row+1)*8+col-1))
-            if col<8 and board[(row+1)*8+col+1] < EMPTY:
+            if row<7 and col<8 and board[(row+1)*8+col+1] < EMPTY:
                 moves.append( (idx, (row+1)*8+col+1))
             continue
         
@@ -126,7 +126,7 @@ def possible_moves(board):
     return moves
 
 def game_over(board):
-    return False
+    return sum(abs(piece) for piece in board)< 2*KING
 
 def make_move(board, move, offset=0):
     
@@ -166,28 +166,63 @@ def print_board(board):
     print(" ", *list(range(8)), sep="\t")
     print("-"*40)   
     
+    
+def best_move(Q, board, moves):
+    
+    best = 0
+    
+    for move in moves:
+        
+        state = tuple(board), move
+        
+        if state in Q:
+            
+            if Q[state]>best:
+                best = Q[state]
+                best_move = move
+                
+    if best>0:
+        return best_move 
+    
+    return random.choice(moves)
+        
+def play(Q, board):
+    
+    moves = possible_moves(board)
+    pick = best_move(Q, board, moves) 
+    _board, reward = make_move(board[:], pick)
+    state = tuple(board), pick
+    if state in Q:
+        Q[state] += reward 
+    else:
+        Q[state] = reward  
+    return Q, _board
+    
+    
+    
 import random
 
 if __name__ == "__main__":
 
     you = True
+    Q = {}
     
     while not game_over(board):
         
         print_board(board)
         
         if you:
-            moves = possible_moves(board)
-            pick = random.choice(moves) 
-            board, reward = make_move(board, pick)
+            Q, board = play(Q, board)
+            
+            
         else:
-            move = input("Your move:")
+            #move = input("Your move:")
             board = [piece*-1 for piece in board[::-1]] # rotate the board
-            moves = possible_moves(board)
-            pick = random.choice(moves) 
-            board, reward = make_move(board, pick, 63)
+            
+            Q, board = play(Q, board)
+            
             board = [piece*-1 for piece in board[::-1]] # rotate the board
             
         you = not you
         
-    
+    print(len(Q))
